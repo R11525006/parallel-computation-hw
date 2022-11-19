@@ -8,10 +8,15 @@ integer::prime,first,count,gcount
 integer,allocatable,dimension(:)::marked
 integer::i,index
 integer::cobp,gcobp  !consecutive odd integers are both prime
+real*8::start,finish                !execution time
 
 call MPI_INIT(ierror)
 call MPI_COMM_SIZE(MPI_COMM_WORLD, size ,ierror)
 call MPI_COMM_RANK(MPI_COMM_WORLD, rank ,ierror)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+start=MPI_Wtime()  !開始時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !write(*,*)"rank",rank
 a=1000000
@@ -93,9 +98,15 @@ end do
 !全部有幾個cobp
 call MPI_REDUCE(cobp,gcobp,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD,ierror) 
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+finish=MPI_Wtime() !結束時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 if (rank==0) then
-   write(*,*)"The number of times that two consecutive odd integers are both prime:"&
+   write(*,"(A80,I5,1X,A30,I8,1X,A10,I2)")"The number of times that two consecutive odd integers are both prime:"&
               & ,gcobp,"for all integers less than:",a,"from rank:",rank
+   
+   write(*,"(A25,f10.6,A20,I3)")"execution time:",finish-start,"processor numbers:",size   !總執行時間
 end if
 
 

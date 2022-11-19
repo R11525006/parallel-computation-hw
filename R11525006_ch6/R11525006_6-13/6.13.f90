@@ -1,4 +1,4 @@
-program exercise11
+program exercise13
 implicit none
 include 'mpif.h'
 integer::rank,size,ierror   !處理器參數 
@@ -8,13 +8,20 @@ integer,allocatable,dimension(:,:)::x        !矩陣樣貌
 integer,allocatable,dimension(:,:)::life     !細胞周圍8格內的活細胞
 integer::iopen,iread,n_unit=9                !開啟檔案
 integer::i,j,k                               !loop index
-
+character(len=80)::form       !!! 輸出格式                
+integer::num                  !!! 輸出格式
+real*8::start,finish          !程式執行時間開始與結束
 
 call MPI_INIT(ierror)       !初始化mpi環境
 call MPI_COMM_SIZE(MPI_COMM_WORLD, size ,ierror) !size
 call MPI_COMM_RANK(MPI_COMM_WORLD, rank ,ierror) !rank
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+start=MPI_Wtime()  !開始時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 !open data
-open (Unit=n_unit,File='life.dat',Status='OLD',Action='read', IOSTAT=iopen) !開啟資料檔案
+open (Unit=n_unit,File='test.dat',Status='OLD',Action='read', IOSTAT=iopen) !開啟資料檔案
 ! iopen=0 means open file successfully
 
 if (iopen==0) then               
@@ -26,18 +33,19 @@ if (iopen==0) then
    x=0                              
    life=0
    
-   
- 
    do i=1,m                      !讀進矩陣資料                
       read(n_unit,*,iostat=iread)(x(i,j),j=1,n)   !iread=0 means read successfully !data input
       if(iread < 0) exit
    end do
 end if
 
+num=n
+write(form,*) "(",num,"I2)" !設定輸出格式
+
 if (rank==0) then
    write(*,*)"state:",0,"rank:",rank             !rank0 顯示讀進來的初始資料
    do i=1,m
-      write(*,100)(x(i,j),j=1,n)
+      write(*,form)(x(i,j),j=1,n)
    end do
 end if
 
@@ -84,20 +92,25 @@ do k=1,p
   end if                                                                         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
                                                           
-  call MPI_BCAST(x,(m+2)*(n+2),MPI_INT,0,MPI_COMM_WORLD,IERROR)                  !統合所有資料後rank0廣播新的資料型態
+  call MPI_BCAST(x,(m+2)*(n+2),MPI_INT,0,MPI_COMM_WORLD,IERROR)                  !統合所有資料後rank0廣播新的x矩陣
    
                                                                    
   if(rank==0) then
      write(*,*)"state:",k,"rank:",rank       !從rank0顯示第k次的資料型態
      do i=1,m
-        write(*,100)(x(i,j),j=1,n)
+        write(*,form)(x(i,j),j=1,n)
      end do
   end if
 
 end do
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+finish=MPI_Wtime()  !結束時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-100 format(5I2)
+if (rank==0) then
+   write(*,"(A25,f10.6,A20,I3)")"execution time:",finish-start,"processor numbers:",size    !總執行時間
+end if
 
 call MPI_FINALIZE(ierror)
-end program exercise11
+end program exercise13

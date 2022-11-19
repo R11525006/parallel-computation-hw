@@ -10,10 +10,15 @@ real*8::f0,f1,f2,fn                 !simpson's rule
 real*8::solution                    !pi value from cauculation
 integer::low_value,high_value       !切割積分區塊
 integer::i
+real*8::start,finish                !execution time
 
 call MPI_INIT(ierror)
 call MPI_COMM_SIZE(MPI_COMM_WORLD, size ,ierror)
 call MPI_COMM_RANK(MPI_COMM_WORLD, rank ,ierror)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+start=MPI_Wtime()  !開始時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 n=50
 a=0
@@ -28,7 +33,7 @@ end do
 
 low_value = 1+rank*(n/2)/size       !最低1
  
-high_value = (rank+1)*(n/2)/size    !最高n
+high_value = (rank+1)*(n/2)/size    !最高n/2
 
 write(*,*)"low:",low_value,"high:",high_value,"rank:",rank
 
@@ -46,6 +51,14 @@ if (rank==0) then
    fn=real(4)/real(1+(x(n))**2)
    solution=(f0-fn+gsum)/real(3*n)
    write(*,100)"The value of pi using Simpson' Rule:", solution," with f(x)=4/(1+x^2)"
+end if
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+finish=MPI_Wtime() !結束時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+if (rank==0) then
+   write(*,"(A25,f10.6,A20,I3)")"execution time:",finish-start,"processor numbers:",size    !總執行時間
 end if
 
 100 format(A40,F10.6,A25)

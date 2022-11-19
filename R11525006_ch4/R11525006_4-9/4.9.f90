@@ -9,10 +9,15 @@ integer,allocatable,dimension(:)::marked
 integer::i,index
 integer::gap,largestgap,glargestgap  !gap between a pair of cosecutive prime numbers
 integer::fp,bp           
+real*8::start,finish                !execution time
 
 call MPI_INIT(ierror)
 call MPI_COMM_SIZE(MPI_COMM_WORLD, size ,ierror)
 call MPI_COMM_RANK(MPI_COMM_WORLD, rank ,ierror)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+start=MPI_Wtime()  !開始時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !write(*,*)"rank",rank
 a=1000000
@@ -101,14 +106,19 @@ do i=0,psize-1       !計算自己的範圍內兩個質數最大的差距
    end if
 end do
    
-write(*,*)"largest:",largestgap,"rank:",rank
-
 !比較所有處理器中最大的差距
 call MPI_REDUCE(largestgap,glargestgap,1,MPI_INT,MPI_MAX,0,MPI_COMM_WORLD,ierror)  !MPI_MAX找出最大值 ,MPI_MAXLOC 找出最大值和其位置
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+finish=MPI_Wtime() !結束時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 if (rank==0) then
-   write(*,*)"The largest gap between a pair of consecutive prime numbers:"&
+   write(*,"(A60,I4,1x,A30,I8,1x,A10,I2)")"The largest gap between a pair of consecutive prime numbers:"&
               & ,glargestgap,"for all integers less than:",a,"from rank:",rank
+
+    write(*,"(A25,f10.6,A20,I3)")"execution time:",finish-start,"processor numbers:",size    !總執行時間
 end if
 
 
