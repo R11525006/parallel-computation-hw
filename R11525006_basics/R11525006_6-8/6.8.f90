@@ -13,11 +13,16 @@ real*8::A(2,2)=1.d0        ![A]*{x}={Time}
 real*8::InverseA(2,2)      !{x}=[A]^-1 * {Time}
 real*8::detA               !A的行列式值
 real*8::latency,bandwidth
-
+real*8::start,finish       !execution time
 
 call MPI_INIT(ierror)
 call MPI_COMM_SIZE(MPI_COMM_WORLD, psize ,ierror)
 call MPI_COMM_RANK(MPI_COMM_WORLD, rank ,ierror)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+start=MPI_Wtime()  !開始時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 A(1,2)=4.d0           !  | 1    4   |   |   latency    |   |  Time1 |
 A(2,2)=40000.d0       !  |          | * |              | = |        |
 n=10000               !  | 1   40000|   | 1/bandwidth  |   |  Time2 |
@@ -41,6 +46,7 @@ if (rank==0)then
    time(2,1)=(finish2-start2)/real(2*n)  !第二次傳送總共時間/來回次數 ,2為send+recv,n為10000次
    write(*,*)"time 1:",time(1,1)        
    write(*,*)"time 2:",time(2,1)
+   write(*,*)
 end if
    
 if (rank==1)then
@@ -62,6 +68,7 @@ if (rank==0) then
    do i=1,2
       write(*,100)(A(i,j),j=1,2)
    end do
+   write(*,*)
    detA=(A(2,2)*A(1,1)-A(1,2)*A(2,1)) !A的行列式值
    InverseA(1,1)=A(2,2)/detA      !!!!!!!!!!!!!!!!!!!!
    InverseA(1,2)=-A(1,2)/detA     !!
@@ -72,14 +79,23 @@ if (rank==0) then
    do i=1,2
       write(*,*)(InverseA(i,j),j=1,2)
    end do
-
+   write(*,*)
+   
    x=matmul(InverseA,time)    !求出latency 和 1/bandwidth
    latency=x(1,1)
    bandwidth=1/x(2,1)
+  
    write(*,*)"latency:",latency,"bandwidth:",bandwidth
+   write(*,*)
 end if
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+finish=MPI_Wtime() !結束時間!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+if (rank==0) then
+   write(*,"(A25,f10.6,A20,I3)")"execution time:",finish-start,"processor numbers:",psize   !總執行時間
+end if
 
 100 format(2f12.3)
 call MPI_FINALIZE(ierror)

@@ -2,7 +2,7 @@
 #PBS -P ACD111143 
 #PBS -N reduction 
 #PBS -q ctest 
-#PBS -l select=1:ncpus=40:mpiprocs=80 
+#PBS -l select=1:ncpus=1:mpiprocs=4 
 #PBS -l place=scatter 
 #PBS -l walltime=00:02:00 
 #PBS -j n 
